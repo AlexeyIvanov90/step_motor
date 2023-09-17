@@ -21,5 +21,5 @@ void nema_17_init(motor* mt, TIM_HandleTypeDef* timer, uint32_t channel);
 void change_speed(motor* mt, uint32_t speed);
 void motor_stop(motor* mt);
 void motor_start(motor* mt);
-void motor_move(motor* mt, uint32_t rotation, uint32_t speed);
+void motor_move(motor* mt, double rotation, uint32_t speed);
 #endif /* INC_STEP_MOTOR_H_ */

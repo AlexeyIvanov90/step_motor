@@ -80,21 +80,28 @@ void motor_start(motor* mt){
 }
 
 
-void motor_move(motor* mt, uint32_t rotation, uint32_t speed){
+void motor_move(motor* mt, double rotation, uint32_t speed){
 	count_step = 0;
 	motor_start(mt);
 
-	for(int i = 0; i < rotation; i++){
-		if(i==0)
+	for(int i = 0; i < (int)rotation; i++){
+
+		if(i==0 && (int)rotation >= 2)
 			change_speed(mt, speed);
 
-		if(i+1 == rotation)
+		if(i+1 == (int)rotation && (int)rotation >= 2)
 			change_speed(mt, 0);
 
 		while(1)
 			if(count_step >= 3200 * (i + 1))
 				break;
 	}
+
+	count_step = 0;
+	while(1)
+		if(count_step >= 3200 * (rotation - (int)rotation))
+			break;
+
 	motor_stop(mt);
 }
 

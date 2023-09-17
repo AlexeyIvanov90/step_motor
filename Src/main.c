@@ -107,7 +107,7 @@ int main(void)
   {
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
-	  motor_move(&nema_17, 3, 25);
+	  motor_move(&nema_17, 20.0, 25);
 
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 	  HAL_Delay(5000);
