@@ -6,6 +6,9 @@
  */
 
 #include "step_motor.h"
+#define MAX_ACCELERATION 20
+
+static uint32_t count_step = 0;
 
 
 static uint16_t arr_speed_nema_17[100]=
@@ -32,18 +35,18 @@ void motor_init(motor* mt, TIM_HandleTypeDef* timer, uint32_t channel){
 void nema_17_init(motor* mt, TIM_HandleTypeDef* timer, uint32_t channel){
 	motor_init(mt, timer, channel);
 
-	mt->acceleration = 10;
+	mt->acceleration = 15;
 	mt->current_speed = 0;
 	mt->arr_speed = arr_speed_nema_17;
 }
 
-static int new_speed = 0;
-static int count_it = 0;
 
 void change_speed(motor* mt, uint32_t speed){
 	while(1){
-		for(int i = 0; i < mt->acceleration; i++)
-			HAL_Delay(10);
+		uint32_t acceleration_start_step = count_step;
+		uint32_t acceleration_step = (MAX_ACCELERATION - mt->acceleration) * mt->current_speed;
+
+		while(count_step - acceleration_start_step < acceleration_step){}
 
 		if(speed==mt->current_speed)
 			break;
@@ -60,8 +63,9 @@ void change_speed(motor* mt, uint32_t speed){
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
     if(htim->Instance == TIM4) {
-    	if(new_speed)
-    		count_it++;
+   		count_step++;
+   		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == GPIO_PIN_RESET)
+			count_step = count_step - count_step%3200;
     }
 }
 
@@ -71,8 +75,28 @@ void motor_stop(motor* mt){
 }
 
 
-void motor_move(motor* mt){
+void motor_start(motor* mt){
 	  __HAL_TIM_SET_COMPARE(mt->timer, mt->channel , 1);
 }
+
+
+void motor_move(motor* mt, uint32_t rotation, uint32_t speed){
+	count_step = 0;
+	motor_start(mt);
+
+	for(int i = 0; i < rotation; i++){
+		if(i==0)
+			change_speed(mt, speed);
+
+		if(i+1 == rotation)
+			change_speed(mt, 0);
+
+		while(1)
+			if(count_step >= 3200 * (i + 1))
+				break;
+	}
+	motor_stop(mt);
+}
+
 
 

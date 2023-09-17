@@ -106,7 +106,16 @@ int main(void)
   while (1)
   {
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-	  motor_move(&nema_17);
+
+	  motor_move(&nema_17, 3, 25);
+
+	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+	  HAL_Delay(5000);
+
+
+	  continue;
+	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+	  motor_start(&nema_17);
 	  HAL_Delay(2500);
 	  change_speed(&nema_17, 25);
 	  HAL_Delay(5000);
@@ -263,11 +272,11 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LED_Pin|EN_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : BUTTON_Pin */
-  GPIO_InitStruct.Pin = BUTTON_Pin;
+  /*Configure GPIO pin : SENSOR_Pin */
+  GPIO_InitStruct.Pin = SENSOR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(SENSOR_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LED_Pin EN_Pin */
   GPIO_InitStruct.Pin = LED_Pin|EN_Pin;
