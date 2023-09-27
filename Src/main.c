@@ -18,10 +18,16 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usbd_cdc_if.h"
+
+#include <stdio.h>
 #include "step_motor.h"
+
+
 
 /* USER CODE END Includes */
 
@@ -52,7 +58,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
-void set_PWM(uint16_t pwm_value);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -89,6 +94,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM4_Init();
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
 
 
@@ -102,49 +108,23 @@ int main(void)
   nema_17_init(&nema_17, &htim4, TIM_CHANNEL_4);
   motor_stop(&nema_17);
 
-
+  char data[30];
+  uint32_t len = 0;
   while (1)
   {
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-
-	  motor_move(&nema_17, 20.0, 25);
-
-	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-	  HAL_Delay(5000);
-
-
-	  continue;
-	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-	  motor_start(&nema_17);
 	  HAL_Delay(2500);
-	  change_speed(&nema_17, 25);
-	  HAL_Delay(5000);
-	  change_speed(&nema_17, 0);
+
+	  len = sprintf(data, "start move ");
+      CDC_Transmit_FS((uint8_t*)data, (uint16_t)len);
+
+	  motor_move(&nema_17, 2, 25);
+
+	  len = sprintf(data, "stop move ");
+      CDC_Transmit_FS((uint8_t*)data, (uint16_t)len);
+
+	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 	  HAL_Delay(2500);
-	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-	  motor_stop(&nema_17);
-	  HAL_Delay(5000);
-
-
-
-
-	  continue;
-	  //HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);//драйвер вкл
-	  //__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, 1);//pulse 1
-	  HAL_Delay(5000);
-
-	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-	  //HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_SET);//драйвер выкл
-	  //__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, 0);//pulse 0
-	  motor_stop(&nema_17);
-
-	  HAL_Delay(5000);
-
-
-
-
-	  //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);
-	  //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_RESET);
 
     /* USER CODE END WHILE */
 
@@ -170,10 +150,16 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 15;
+  RCC_OscInitStruct.PLL.PLLN = 144;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 5;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -290,15 +276,9 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void set_PWM(uint16_t value){
-    TIM_OC_InitTypeDef sConfigOC;
 
-    sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = value;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_4);
-    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+int CDC_Receive_FS(uint8_t* Buf, uint32_t *Len){
+	return 0;
 }
 
 /* USER CODE END 4 */
