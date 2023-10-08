@@ -50,7 +50,7 @@
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
-
+uint64_t step = 3200;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -106,21 +106,20 @@ int main(void)
   //HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
   motor nema_17;
   nema_17_init(&nema_17, &htim4, TIM_CHANNEL_4);
-  motor_stop(&nema_17);
 
-  char data[30];
+  char data[40];
   uint32_t len = 0;
   while (1)
   {
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 	  HAL_Delay(2500);
 
-	  len = sprintf(data, "start move ");
+	  len = sprintf(data, "start rotation, step = %d ", (int)step);
       CDC_Transmit_FS((uint8_t*)data, (uint16_t)len);
 
-	  motor_move(&nema_17, 2, 25);
+	  motor_move(&nema_17, step, 25);
 
-	  len = sprintf(data, "stop move ");
+	  len = sprintf(data, "stop rotation ");
       CDC_Transmit_FS((uint8_t*)data, (uint16_t)len);
 
 	  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
@@ -277,9 +276,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-int CDC_Receive_FS(uint8_t* Buf, uint32_t *Len){
-	return 0;
-}
+
 
 /* USER CODE END 4 */
 

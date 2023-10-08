@@ -8,7 +8,7 @@
 #include "step_motor.h"
 #define MAX_ACCELERATION 20
 
-static uint32_t count_step = 0;
+static uint64_t count_step = 0;
 
 
 static uint16_t arr_speed_nema_17[100]=
@@ -80,27 +80,21 @@ void motor_start(motor* mt){
 }
 
 
-void motor_move(motor* mt, double rotation, uint32_t speed){
+void motor_move(motor* mt, uint64_t step, uint8_t speed){
+	if(step == 0)
+		return;
+
 	count_step = 0;
 	motor_start(mt);
 
-	for(int i = 0; i < (int)rotation; i++){
+	while(count_step <= step){
 
-		if(i==0 && (int)rotation >= 2)
+		if(count_step == 0 && step >= 6400)
 			change_speed(mt, speed);
 
-		if(i+1 == (int)rotation && (int)rotation >= 2)
+		if(count_step == step - 3200 && step >= 6400)
 			change_speed(mt, 0);
-
-		while(1)
-			if(count_step >= 3200 * (i + 1))
-				break;
 	}
-
-	count_step = 0;
-	while(1)
-		if(count_step >= 3200 * (rotation - (int)rotation))
-			break;
 
 	motor_stop(mt);
 }
